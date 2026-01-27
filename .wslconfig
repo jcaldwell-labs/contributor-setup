@@ -1,0 +1,30 @@
+# .wslconfig - Global WSL 2 configuration
+# This file should be placed in your Windows user directory: %USERPROFILE%\.wslconfig
+# (e.g., C:\Users\YourName\.wslconfig)
+
+[wsl2]
+# Limits VM memory to 8 GB (adjust based on your system)
+memory=8GB
+
+# Sets the VM to use 4 virtual processors (adjust based on your system)
+processors=4
+
+# Sets amount of swap space to 2 GB
+swap=2GB
+
+# Turns off default connection to bind WSL 2 localhost to Windows localhost
+localhostforwarding=true
+
+# Disables nested virtualization
+nestedVirtualization=false
+
+# Turns on output console showing contents of dmesg when opening a WSL 2 distro for debugging
+debugConsole=false
+
+# Enable experimental features
+[experimental]
+# Automatically release cached memory after detecting idle CPU usage
+autoMemoryReclaim=gradual
+
+# Enable sparse VHD to automatically shrink disk size
+sparseVhd=true

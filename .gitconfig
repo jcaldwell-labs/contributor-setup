@@ -1,0 +1,78 @@
+[user]
+	# Set your name and email
+	# name = Your Name
+	# email = your.email@example.com
+
+[core]
+	editor = vim
+	autocrlf = input
+	excludesfile = ~/.gitignore_global
+
+[init]
+	defaultBranch = main
+
+[pull]
+	rebase = false
+
+[push]
+	default = simple
+	followTags = true
+
+[alias]
+	# Short status
+	st = status -sb
+	
+	# Commit shortcuts
+	ci = commit
+	co = checkout
+	br = branch
+	
+	# Add and commit
+	ac = !git add -A && git commit
+	
+	# Show log with graph
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+	
+	# Show last commit
+	last = log -1 HEAD --stat
+	
+	# Undo last commit
+	undo = reset HEAD~1 --soft
+	
+	# Amend last commit
+	amend = commit --amend --no-edit
+	
+	# List aliases
+	aliases = config --get-regexp alias
+
+[color]
+	ui = auto
+	branch = auto
+	diff = auto
+	status = auto
+
+[color "branch"]
+	current = yellow reverse
+	local = yellow
+	remote = green
+
+[color "diff"]
+	meta = yellow bold
+	frag = magenta bold
+	old = red bold
+	new = green bold
+
+[color "status"]
+	added = green
+	changed = yellow
+	untracked = red
+
+[diff]
+	tool = vimdiff
+
+[merge]
+	tool = vimdiff
+	conflictstyle = diff3
+
+[help]
+	autocorrect = 1
