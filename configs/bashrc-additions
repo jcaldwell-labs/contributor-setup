@@ -1,0 +1,202 @@
+# ====================================
+# jcaldwell-labs Contributor Shell Additions
+# ====================================
+# Source from .bashrc: source ~/.bashrc-additions
+# Or cherry-pick specific sections as needed
+
+# ============================================================================
+# PROMPT TOGGLE
+# ============================================================================
+# Switch between minimal (agent-friendly) and full (developer) prompts
+# Essential for Claude Code workflows
+
+# Git branch parser (used by full prompt)
+parse_git_branch() {
+    git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
+
+prompt-min() {
+    # Minimal prompt: green user@host:path$
+    # Best for agent interactions (Claude Code, scripts)
+    export PS1='\[\e[32m\]\u@\h:\w\$ \[\e[0m\]'
+    echo "Minimal prompt enabled (agent-friendly)"
+}
+
+prompt-full() {
+    # Full prompt: user@host:path (git-branch)$
+    # Shows git branch for development work
+    export PS1='\[\e[32m\]\u@\h\[\e[0m\]:\[\e[34m\]\w\[\e[33m\]$(parse_git_branch)\[\e[0m\]\$ '
+    echo "Full prompt enabled (git-aware)"
+}
+
+prompt-toggle() {
+    if [[ "$PS1" == *"parse_git_branch"* ]]; then
+        prompt-min
+    else
+        prompt-full
+    fi
+}
+
+# Default to minimal prompt (agent-friendly by default)
+prompt-min > /dev/null 2>&1
+
+# ============================================================================
+# MY-CONTEXT INTEGRATION (if installed)
+# ============================================================================
+# Context tracking for work sessions
+# Install: https://github.com/jcaldwell-labs/my-context
+
+if command -v my-context &>/dev/null; then
+    # File-based mode aliases
+    alias cx="my-context"
+    alias cxs="my-context start"
+    alias cxn="my-context note"
+    alias cxf="my-context file"
+    alias cxl="my-context list"
+    alias cxw="my-context show"
+    alias cxe="my-context export"
+
+    # Database mode aliases (preferred)
+    alias mcn='export MY_CONTEXT_HOME=db && my-context note'
+    alias mcs='export MY_CONTEXT_HOME=db && my-context show'
+    alias mcl='export MY_CONTEXT_HOME=db && my-context list'
+    alias mce='export MY_CONTEXT_HOME=db && my-context export'
+    alias mcr='export MY_CONTEXT_HOME=db && my-context resume'
+    alias mcst='export MY_CONTEXT_HOME=db && my-context start'
+fi
+
+# ============================================================================
+# JAVA VERSION SWITCHING (if multiple Java versions installed)
+# ============================================================================
+# Default: OpenJDK 21 LTS (installed by install-tools.sh)
+
+java21() {
+    local java_home="/usr/lib/jvm/java-21-openjdk-amd64"
+    if [ -d "$java_home" ]; then
+        export JAVA_HOME="$java_home"
+        export PATH="$JAVA_HOME/bin:$PATH"
+        echo "Switched to Java 21: $(java -version 2>&1 | head -1)"
+    else
+        echo "Java 21 (OpenJDK) not installed at $java_home"
+    fi
+}
+
+java17() {
+    local java_home="/usr/lib/jvm/java-17-openjdk-amd64"
+    if [ -d "$java_home" ]; then
+        export JAVA_HOME="$java_home"
+        export PATH="$JAVA_HOME/bin:$PATH"
+        echo "Switched to Java 17: $(java -version 2>&1 | head -1)"
+    else
+        echo "Java 17 (OpenJDK) not installed at $java_home"
+    fi
+}
+
+# ============================================================================
+# MARKDOWN VIEWING (if glow installed)
+# ============================================================================
+# Render markdown beautifully in terminal
+
+if command -v glow &>/dev/null; then
+    alias mdview='glow --pager'           # View with auto-paging
+    alias mdless='glow | less -RSX'       # View with manual less
+    alias mdcat='glow'                    # Quick view (no paging)
+fi
+
+# ============================================================================
+# DEVELOPMENT SHORTCUTS
+# ============================================================================
+
+# Quick directory navigation
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# Git shortcuts (enhanced)
+alias gs='git status -sb'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline --graph --decorate -20'
+alias gd='git diff'
+alias gco='git checkout'
+alias gb='git branch'
+alias gf='git fetch --all --prune'
+
+# Quick edit configs
+alias vimrc='${EDITOR:-vim} ~/.vimrc'
+alias bashrc='${EDITOR:-vim} ~/.bashrc'
+alias tmuxconf='${EDITOR:-vim} ~/.tmux.conf'
+
+# Python
+alias py='python3'
+alias pip='pip3'
+alias venv='python3 -m venv'
+alias activate='source venv/bin/activate'
+
+# Safety (uncomment if you want confirmation prompts)
+# alias rm='rm -i'
+# alias cp='cp -i'
+# alias mv='mv -i'
+
+# ============================================================================
+# WSL-SPECIFIC (if running in WSL)
+# ============================================================================
+
+if grep -qi microsoft /proc/version 2>/dev/null; then
+    # Open Windows Explorer in current directory
+    alias explorer='explorer.exe .'
+
+    # Open file with Windows default app
+    alias wopen='cmd.exe /c start'
+
+    # Quick path conversion
+    alias winpath='wslpath -w'
+    alias linpath='wslpath -u'
+
+    # Clipboard integration
+    alias clip='clip.exe'
+    alias paste='powershell.exe -command "Get-Clipboard"'
+fi
+
+# ============================================================================
+# FZF INTEGRATION (if installed)
+# ============================================================================
+
+if command -v fzf &>/dev/null; then
+    # Use fd for file finding if available
+    if command -v fdfind &>/dev/null; then
+        export FZF_DEFAULT_COMMAND='fdfind --type f --hidden --exclude .git'
+        export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+    fi
+
+    # Enable fzf key bindings (Ctrl+T, Ctrl+R, Alt+C)
+    [ -f /usr/share/doc/fzf/examples/key-bindings.bash ] && \
+        source /usr/share/doc/fzf/examples/key-bindings.bash
+fi
+
+# ============================================================================
+# HISTORY ENHANCEMENTS
+# ============================================================================
+
+# Larger history
+HISTSIZE=10000
+HISTFILESIZE=20000
+
+# Ignore duplicates and lines starting with space
+HISTCONTROL=ignoreboth
+
+# Append to history file, don't overwrite
+shopt -s histappend
+
+# ============================================================================
+# QUICK REFERENCE
+# ============================================================================
+# prompt-min      - Minimal prompt (for Claude Code)
+# prompt-full     - Full prompt (with git branch)
+# prompt-toggle   - Switch between modes
+# java17/java21   - Switch Java versions
+# mcn/mcs/mcl     - my-context shortcuts (db mode)
+# mdview/mdcat    - Markdown viewing (glow)
+# gs/ga/gc/gp/gl  - Git shortcuts
+# ============================================================================
