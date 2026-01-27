@@ -63,7 +63,7 @@ if ! command -v docker &> /dev/null; then
     curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
     echo -e "${YELLOW}Running Docker installation script...${NC}"
     sudo sh /tmp/get-docker.sh
-    sudo usermod -aG docker $USER
+    sudo usermod -aG docker "$USER"
     rm /tmp/get-docker.sh
     echo -e "${YELLOW}Note: You may need to log out and back in for Docker group membership to take effect.${NC}"
 else
