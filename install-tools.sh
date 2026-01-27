@@ -46,8 +46,12 @@ sudo apt-get install -y \
 # Install Node.js (via NodeSource)
 if ! command -v node &> /dev/null; then
     echo -e "${GREEN}Installing Node.js...${NC}"
-    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    echo -e "${YELLOW}Downloading NodeSource setup script...${NC}"
+    curl -fsSL https://deb.nodesource.com/setup_lts.x -o /tmp/nodesource_setup.sh
+    echo -e "${YELLOW}Running NodeSource setup script (from official source)...${NC}"
+    sudo -E bash /tmp/nodesource_setup.sh
     sudo apt-get install -y nodejs
+    rm /tmp/nodesource_setup.sh
 else
     echo -e "${YELLOW}Node.js already installed. Skipping...${NC}"
 fi
@@ -55,7 +59,9 @@ fi
 # Install Docker (if not already installed)
 if ! command -v docker &> /dev/null; then
     echo -e "${GREEN}Installing Docker...${NC}"
+    echo -e "${YELLOW}Downloading Docker installation script from official source...${NC}"
     curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+    echo -e "${YELLOW}Running Docker installation script...${NC}"
     sudo sh /tmp/get-docker.sh
     sudo usermod -aG docker $USER
     rm /tmp/get-docker.sh
