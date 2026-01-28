@@ -70,27 +70,40 @@ fi
 # ============================================================================
 # Default: OpenJDK 21 LTS (installed by install-tools.sh)
 
-java21() {
-    local java_home="/usr/lib/jvm/java-21-openjdk-amd64"
-    if [ -d "$java_home" ]; then
-        export JAVA_HOME="$java_home"
-        export PATH="$JAVA_HOME/bin:$PATH"
-        echo "Switched to Java 21: $(java -version 2>&1 | head -1)"
-    else
-        echo "Java 21 (OpenJDK) not installed at $java_home"
-    fi
+# Helper: find Java home for a version (handles amd64/arm64)
+_find_java_home() {
+    local version="$1"
+    local arch=$(dpkg --print-architecture 2>/dev/null || echo "amd64")
+    local base="/usr/lib/jvm"
+
+    # Try architecture-specific path first, then generic
+    for path in "$base/java-${version}-openjdk-${arch}" "$base/java-${version}-openjdk"; do
+        [ -d "$path" ] && echo "$path" && return 0
+    done
+    return 1
 }
 
-java17() {
-    local java_home="/usr/lib/jvm/java-17-openjdk-amd64"
-    if [ -d "$java_home" ]; then
-        export JAVA_HOME="$java_home"
-        export PATH="$JAVA_HOME/bin:$PATH"
-        echo "Switched to Java 17: $(java -version 2>&1 | head -1)"
-    else
-        echo "Java 17 (OpenJDK) not installed at $java_home"
+# Helper: switch Java (with PATH deduplication)
+_switch_java() {
+    local version="$1"
+    local java_home
+    java_home=$(_find_java_home "$version") || {
+        echo "Java $version (OpenJDK) not found in /usr/lib/jvm"
+        return 1
+    }
+
+    # Remove old JAVA_HOME/bin from PATH before adding new one
+    if [ -n "$JAVA_HOME" ]; then
+        PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "^$JAVA_HOME/bin$" | tr '\n' ':' | sed 's/:$//')
     fi
+
+    export JAVA_HOME="$java_home"
+    export PATH="$JAVA_HOME/bin:$PATH"
+    echo "Switched to Java $version: $(java -version 2>&1 | head -1)"
 }
+
+java21() { _switch_java 21; }
+java17() { _switch_java 17; }
 
 # ============================================================================
 # MARKDOWN VIEWING (if glow installed)
@@ -164,8 +177,11 @@ fi
 # ============================================================================
 
 if command -v fzf &>/dev/null; then
-    # Use fd for file finding if available
-    if command -v fdfind &>/dev/null; then
+    # Use fd for file finding if available (prefer 'fd' symlink, fall back to 'fdfind')
+    if command -v fd &>/dev/null; then
+        export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+        export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+    elif command -v fdfind &>/dev/null; then
         export FZF_DEFAULT_COMMAND='fdfind --type f --hidden --exclude .git'
         export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
     fi

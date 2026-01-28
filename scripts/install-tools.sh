@@ -129,12 +129,27 @@ if [[ "$install_glow" =~ ^[Yy]$ ]]; then
         echo -e "${GREEN}Installing glow...${NC}"
         # glow not in Debian stable, install from GitHub releases
         GLOW_VERSION="1.5.1"
-        GLOW_URL="https://github.com/charmbracelet/glow/releases/download/v${GLOW_VERSION}/glow_${GLOW_VERSION}_linux_amd64.tar.gz"
-        curl -fsSL "$GLOW_URL" -o /tmp/glow.tar.gz
-        tar -xzf /tmp/glow.tar.gz -C /tmp glow
-        sudo mv /tmp/glow /usr/local/bin/
-        rm /tmp/glow.tar.gz
-        echo -e "${GREEN}glow installed.${NC}"
+
+        # Detect architecture
+        ARCH=$(dpkg --print-architecture 2>/dev/null || uname -m)
+        case "$ARCH" in
+            amd64|x86_64) GLOW_ARCH="linux_amd64" ;;
+            arm64|aarch64) GLOW_ARCH="linux_arm64" ;;
+            *)
+                echo -e "${YELLOW}Unsupported architecture ($ARCH) for glow binary.${NC}"
+                echo -e "${YELLOW}Install manually from: https://github.com/charmbracelet/glow/releases${NC}"
+                GLOW_ARCH=""
+                ;;
+        esac
+
+        if [ -n "$GLOW_ARCH" ]; then
+            GLOW_URL="https://github.com/charmbracelet/glow/releases/download/v${GLOW_VERSION}/glow_${GLOW_VERSION}_${GLOW_ARCH}.tar.gz"
+            curl -fsSL "$GLOW_URL" -o /tmp/glow.tar.gz
+            tar -xzf /tmp/glow.tar.gz -C /tmp glow
+            sudo mv /tmp/glow /usr/local/bin/
+            rm /tmp/glow.tar.gz
+            echo -e "${GREEN}glow installed.${NC}"
+        fi
     else
         echo -e "${YELLOW}glow already installed.${NC}"
     fi
@@ -145,16 +160,23 @@ fi
 # ====================================
 read -p "Install Java 21 (OpenJDK LTS)? (y/N): " install_java
 if [[ "$install_java" =~ ^[Yy]$ ]]; then
-    if ! java -version 2>&1 | grep -q "21"; then
+    # Check specifically for Java 21.x (not just any version containing "21")
+    if ! java -version 2>&1 | grep -qE '"21\.[0-9]'; then
         echo -e "${GREEN}Installing OpenJDK 21...${NC}"
         sudo apt-get install -y openjdk-21-jdk
         echo -e "${GREEN}Java 21 (OpenJDK) installed.${NC}"
 
-        # Set JAVA_HOME
+        # Set JAVA_HOME with architecture detection
         if ! grep -q "JAVA_HOME" "$HOME/.bashrc"; then
-            echo 'export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64' >> "$HOME/.bashrc"
-            echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> "$HOME/.bashrc"
-            echo -e "${GREEN}JAVA_HOME configured in ~/.bashrc${NC}"
+            ARCH=$(dpkg --print-architecture 2>/dev/null || echo "amd64")
+            JAVA_PATH="/usr/lib/jvm/java-21-openjdk-${ARCH}"
+            if [ -d "$JAVA_PATH" ]; then
+                echo "export JAVA_HOME=$JAVA_PATH" >> "$HOME/.bashrc"
+                echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> "$HOME/.bashrc"
+                echo -e "${GREEN}JAVA_HOME configured in ~/.bashrc${NC}"
+            else
+                echo -e "${YELLOW}Warning: Could not find Java at $JAVA_PATH${NC}"
+            fi
         fi
     else
         echo -e "${YELLOW}Java 21 already installed.${NC}"

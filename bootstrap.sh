@@ -104,6 +104,8 @@ fi
 if [ -f "$SCRIPT_DIR/configs/bashrc-additions" ]; then
     echo -e "${GREEN}Installing bashrc-additions...${NC}"
     copy_file "$SCRIPT_DIR/configs/bashrc-additions" "$HOME/.bashrc-additions"
+    echo -e "${YELLOW}  Note: ~/.bashrc-additions is copied (not symlinked) for customization.${NC}"
+    echo -e "${YELLOW}  Re-run bootstrap.sh to get updates (existing file backed up).${NC}"
 fi
 
 # ====================================
