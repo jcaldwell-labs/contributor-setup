@@ -1,0 +1,138 @@
+" ====================================
+" jcaldwell-labs Contributor Vim Config
+" ====================================
+" Source: Adapted from javadev (minimalist + vim-plug)
+" Dependencies: fzf, fd-find, ripgrep
+
+" === PLUGIN MANAGER (vim-plug) ===
+" Auto-install vim-plug if not present
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+
+call plug#begin('~/.vim/plugged')
+
+" Core plugins (minimal but essential)
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }  " Fuzzy finder
+Plug 'junegunn/fzf.vim'                               " fzf vim integration
+Plug 'preservim/nerdtree'                             " File tree
+Plug 'morhetz/gruvbox'                                " Dark colorscheme
+
+call plug#end()
+
+" === CORE SETTINGS ===
+set nocompatible
+set number                  " Absolute line numbers
+set relativenumber          " Relative line numbers (current = 0)
+set tabstop=4 shiftwidth=4 expandtab   " 4-space tabs
+set autoindent smartindent
+set mouse=a                 " Mouse support
+set clipboard=unnamedplus   " System clipboard integration
+set ignorecase smartcase    " Smart case search
+set incsearch hlsearch      " Incremental + highlight search
+set hidden                  " Allow buffer switching without save
+set termguicolors           " True color support
+set cursorline              " Highlight current line
+set scrolloff=5             " Keep 5 lines visible above/below cursor
+set wildmenu                " Command-line completion
+set backspace=indent,eol,start  " Backspace over everything
+
+syntax on
+filetype plugin indent on
+
+" No swap/backup files (clutters filesystem)
+set nobackup nowritebackup noswapfile
+
+" Encoding
+set encoding=utf-8
+
+" === COLORSCHEME ===
+set background=dark
+silent! colorscheme gruvbox
+
+" === KEY MAPPINGS ===
+let mapleader = ","
+
+" Fuzzy finder: Ctrl+P for files, Ctrl+F for grep
+nnoremap <C-p> :Files<CR>
+nnoremap <C-f> :Rg<CR>
+nnoremap <leader>b :Buffers<CR>
+
+" File tree: ,n to toggle
+nnoremap <leader>n :NERDTreeToggle<CR>
+
+" Terminal: ,t to open
+nnoremap <leader>t :terminal<CR>
+
+" Quick save/quit
+nnoremap <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
+
+" Clear search highlight
+nnoremap <leader>/ :nohl<CR>
+
+" Move between splits with Ctrl+hjkl
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" === FZF SETTINGS ===
+let g:fzf_layout = { 'down': '40%' }
+" Use fd for faster file listing (respects .gitignore)
+" Note: install-tools.sh creates symlink: fd -> fdfind
+let $FZF_DEFAULT_COMMAND = 'fd --type f --hidden --exclude .git'
+
+" === NERDTREE SETTINGS ===
+let NERDTreeShowHidden=1    " Show hidden files
+let NERDTreeMinimalUI=1     " Minimal interface
+
+" Auto-open NERDTree if no file specified
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+
+" Close vim if NERDTree is only window left
+autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
+
+" === FILE TYPE SETTINGS ===
+" 2-space indentation for web files
+autocmd FileType javascript,typescript,html,css,json,yaml setlocal tabstop=2 shiftwidth=2 softtabstop=2
+
+" Python: 4-space (default)
+autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4
+
+" Rust: 4-space
+autocmd FileType rust setlocal tabstop=4 shiftwidth=4 softtabstop=4
+
+" Shell scripts
+autocmd FileType sh,bash setlocal tabstop=4 shiftwidth=4 softtabstop=4
+
+" Markdown
+autocmd FileType markdown setlocal wrap linebreak
+
+" === LOCAL OVERRIDES ===
+" Load project-local vim settings if present
+" Security note: This loads .vimrc.local from the current directory.
+" Only use in trusted project directories; a malicious .vimrc.local
+" could execute arbitrary commands when you open vim.
+if filereadable(".vimrc.local")
+    source .vimrc.local
+endif
+
+" ====================================
+" QUICK REFERENCE
+" ====================================
+" Ctrl+P      - Find files (fzf)
+" Ctrl+F      - Grep content (rg)
+" ,b          - List buffers
+" ,n          - Toggle file tree
+" ,t          - Open terminal
+" ,w          - Save
+" ,q          - Quit
+" ,/          - Clear search highlight
+" Ctrl+hjkl   - Navigate splits
+" ====================================
+" First run: :PlugInstall to install plugins
+" ====================================
